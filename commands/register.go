@@ -6,8 +6,9 @@ import (
 )
 
 type RegisterCommand struct {
-	url   string
-	token string
+	url    string
+	token  string
+	reader *bufio.Reader
 }
 
 func Register() {
@@ -31,17 +32,20 @@ func (rc *RegisterCommand) ask(key, prompt string, allowEmpty ...bool) string {
 }
 
 func (rc *RegisterCommand) askOnce(prompt string, result *string, allowEmpty bool) bool {
-	reader := bufio.NewReader(os.Stdin)
-	line, _, err := reader.ReadLine()
+	if rc.reader == nil {
+
+		rc.reader = bufio.NewReader(os.Stdin)
+	}
+	line, _, err := rc.reader.ReadLine()
 	if err != nil {
-		return false
+		panic(err)
 	}
 	output := string(line)
 	if output != "" {
 		*result = output
 		return true
 	}
-	if output == "" && allowEmpty {
+	if allowEmpty {
 		return true
 	}
 	return false
