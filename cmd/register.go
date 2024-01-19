@@ -4,9 +4,8 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"simple-gitlab-runner/commands"
 )
 
 // registerCmd represents the register command
@@ -15,7 +14,7 @@ var registerCmd = &cobra.Command{
 	Short: "",
 	Long:  `gitlab-runner register - register a new runner`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("register called")
+		commands.Register()
 	},
 }
 
