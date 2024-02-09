@@ -23,3 +23,7 @@ go.work
 # Editors
 .vscode
 .idea
+
+
+# config
+.config.toml
