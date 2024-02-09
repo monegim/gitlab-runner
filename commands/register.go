@@ -6,13 +6,16 @@ import (
 	"simple-gitlab-runner/common"
 	"simple-gitlab-runner/network"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
 type RegisterCommand struct {
-	reader *bufio.Reader
+	reader  *bufio.Reader
+	network common.Network
 	configOptions
+	registered  bool
 	Description string //	no	Description of the runner
 	// info	hash //	no	Runner’s metadata. You can include name, version, revision, platform, and architecture, but only version, platform, and architecture are displayed in the Admin Area of the UI
 	// active	bool //	no	Deprecated: Use paused instead. Specifies if the runner is allowed to receive new jobs
@@ -25,11 +28,22 @@ type RegisterCommand struct {
 	MaintainerNote  string //	no	Deprecated, see maintenance_note
 	MaintenanceNote string //	no	Free-form maintenance notes for the runner (1024 characters)
 	common.RunnerCredentials
+	common.RunnerConfig
+	timeNowFn func() time.Time
 }
 
 func Register() {
 	rc := RegisterCommand{}
 	rc.askRunner()
+	config := rc.getConfig()
+
+	rc.askExecuter()
+}
+
+func (rc *RegisterCommand) askExecuter()  {
+	for {
+		names := common.Get
+	}
 }
 
 func (rc *RegisterCommand) askRunner() {
@@ -44,6 +58,19 @@ func (rc *RegisterCommand) askRunner() {
 		logrus.Warningln("A runner with this system ID and token has already been registered.")
 	}
 	rc.verifyRunner()
+
+}
+
+func (rc *RegisterCommand) verifyRunner() {
+	result := rc.network.VerifyRunner(rc.RunnerCredentials, rc.SystemIDState.GetSystemID())
+	if result == nil || result.ID == 0 {
+		logrus.Panicln("Failed to verify the runner.")
+	}
+	rc.ID = result.ID
+	rc.TokenExpiresAt = result.TokenExpiresAt
+	rc.TokenObtainedAt = rc.timeNowFn().UTC().Truncate(time.Second)
+	rc.registered = true
+	rc.Name = rc.ask("name", "Enter a name for the runner. This is stored only in the local config.toml file:")
 
 }
 
@@ -80,5 +107,5 @@ func (rc *RegisterCommand) askOnce(prompt string, result *string, allowEmpty boo
 }
 
 func (rc *RegisterCommand) tokenIsRunnerToken() bool {
-	return network.TokenIsCreatedRunnerToken(rc.token)
+	return network.TokenIsCreatedRunnerToken(rc.Token)
 }
